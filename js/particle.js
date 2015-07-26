@@ -16,3 +16,5 @@ class Particle {
         return this.pos.slice();
     }
 }
+
+export default Particle;

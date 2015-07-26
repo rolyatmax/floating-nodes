@@ -1,4 +1,4 @@
-import twgl from 'twgl.js';
+import {twgl} from 'twgl.js';
 import Particle from './particle';
 import {range, random} from 'utils';
 
@@ -8,36 +8,39 @@ let container = document.querySelector('.container');
 let shaders = ['js/gl.vs', 'js/gl.fs'];
 Promise.all(shaders.map(get)).then(main);
 
-let {height, width} = container.getBoundingClientRect();
-let canvas = document.createElement('canvas');
-canvas.style.height = `${height}px`;
-canvas.style.width = `${width}px`;
-container.appendChild(canvas);
-let gl = twgl.getWebGLContext(canvas);
-let programInfo = twgl.createProgramInfo(gl, [vs, fs]);
-twgl.resizeCanvasToDisplaySize(gl.canvas);
-gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
 
 function main([vs, fs]) {
+    let {height, width} = container.getBoundingClientRect();
+    let canvas = document.createElement('canvas');
+    canvas.style.height = `${height}px`;
+    canvas.style.width = `${width}px`;
+    container.appendChild(canvas);
+    let gl = twgl.getWebGLContext(canvas);
+    let programInfo = twgl.createProgramInfo(gl, [vs, fs]);
+    twgl.resizeCanvasToDisplaySize(gl.canvas);
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
     let particles = range(PARTICLE_COUNT).map(() => {
         let pos = [random(-1, 1), random(-1, 1)];
-        let inertia = [random(-0.1, 0.1), random(-0.1, 0.1)];
+        let inertia = [random(-0.01, 0.01), random(-0.01, 0.01)];
         return new Particle(pos, inertia);
     });
+
+    let continuePlaying = true;
 
     function frame(i) {
         if (continuePlaying) {
             requestAnimationFrame(frame);
         }
         let pts = particles.reduce((memo, particle) => memo.concat(particle.update()), []);
-        let arrays = {position: {size: 2, data: pts}};
+        let arrays = {position: {numComponents: 2, data: pts}};
         let bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
         gl.useProgram(programInfo.program);
         twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
         twgl.drawBufferInfo(gl, gl.POINTS, bufferInfo);
     }
 
+    requestAnimationFrame(frame);
 }
 
 function get(url) {

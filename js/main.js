@@ -45,7 +45,9 @@ function main([vs, fs]) {
         sortedByX = sortedByX.sort((a, b) => a.pos[0] - b.pos[0]);
         sortedByY = sortedByY.sort((a, b) => a.pos[1] - b.pos[1]);
 
-        return particles.reduce((edges, particle) => {
+        let distances = [];
+
+        let edges = particles.reduce((edges, particle) => {
             let {pos: [x, y]} = particle;
             let startX = binarySearchLow(sortedByX, x - PROXIMITY_THRESHOLD, p => p.pos[0]);
             let endX = binarySearchHigh(sortedByX, x + PROXIMITY_THRESHOLD, p => p.pos[0]);
@@ -55,8 +57,10 @@ function main([vs, fs]) {
             let i = startX || 0;
             endX = Number.isFinite(endX) ? endX : sortedByX.length - 1;
             while (i <= endX) {
-                if (dist(sortedByX[i].pos, [x, y]) <= PROXIMITY_THRESHOLD) {
+                let distance = dist(sortedByX[i].pos, [x, y]);
+                if (distance <= PROXIMITY_THRESHOLD) {
                     edges = edges.concat(sortedByX[i].pos).concat([x, y]);
+                    distances.push(distance, distance);
                 }
                 i += 1;
             }
@@ -64,13 +68,20 @@ function main([vs, fs]) {
             let j = startY || 0;
             endY = Number.isFinite(endY) ? endY : sortedByY.length - 1;
             while (j <= endY) {
-                if (dist(sortedByY[j].pos, [x, y]) <= PROXIMITY_THRESHOLD) {
+                let distance = dist(sortedByY[j].pos, [x, y]);
+                if (distance <= PROXIMITY_THRESHOLD) {
                     edges = edges.concat(sortedByY[j].pos).concat([x, y]);
+                    distances.push(distance, distance);
                 }
                 j += 1;
             }
             return edges;
         }, []);
+
+        return {
+            distances,
+            edges
+        }
     }
 
     function frame(i) {
@@ -79,14 +90,20 @@ function main([vs, fs]) {
         }
         let pts = particles.reduce((memo, particle) => memo.concat(particle.update()), []);
 
-        let arrays = {position: {numComponents: 2, data: pts}};
+        let arrays = {
+            position: {numComponents: 2, data: pts},
+            distance: {numComponents: 1, data: range(pts.length / 2).map(() => 0.35)}
+        };
         let bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
         gl.useProgram(programInfo.program);
         twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
         twgl.drawBufferInfo(gl, gl.POINTS, bufferInfo);
 
-        let edges = getEdges();
-        arrays = {position: {numComponents: 2, data: edges}};
+        let {edges, distances} = getEdges();
+        arrays = {
+            position: {numComponents: 2, data: edges},
+            distance: {numComponents: 1, data: distances}
+        };
         bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
         gl.useProgram(programInfo.program);
         twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);

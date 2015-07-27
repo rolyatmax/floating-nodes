@@ -2,8 +2,8 @@ import {twgl} from 'twgl.js';
 import Particle from './particle';
 import {range, random} from 'utils';
 
-const PARTICLE_COUNT = 70;
-const PROXIMITY_THRESHOLD = 0.3;
+const PARTICLE_COUNT = 40;
+const PROXIMITY_THRESHOLD = 0.5;
 const SPEED = 0.005;
 
 let container = document.querySelector('.container');
@@ -45,7 +45,7 @@ function main([vs, fs]) {
         sortedByX = sortedByX.sort((a, b) => a.pos[0] - b.pos[0]);
         sortedByY = sortedByY.sort((a, b) => a.pos[1] - b.pos[1]);
 
-        let distances = [];
+        let opacities = [];
 
         let edges = particles.reduce((edges, particle) => {
             let {pos: [x, y]} = particle;
@@ -60,7 +60,8 @@ function main([vs, fs]) {
                 let distance = dist(sortedByX[i].pos, [x, y]);
                 if (distance <= PROXIMITY_THRESHOLD) {
                     edges = edges.concat(sortedByX[i].pos).concat([x, y]);
-                    distances.push(distance, distance);
+                    let opacity = 1 - (distance / PROXIMITY_THRESHOLD);
+                    opacities.push(opacity, opacity);
                 }
                 i += 1;
             }
@@ -71,7 +72,8 @@ function main([vs, fs]) {
                 let distance = dist(sortedByY[j].pos, [x, y]);
                 if (distance <= PROXIMITY_THRESHOLD) {
                     edges = edges.concat(sortedByY[j].pos).concat([x, y]);
-                    distances.push(distance, distance);
+                    let opacity = 1 - (distance / PROXIMITY_THRESHOLD);
+                    opacities.push(opacity, opacity);
                 }
                 j += 1;
             }
@@ -79,7 +81,7 @@ function main([vs, fs]) {
         }, []);
 
         return {
-            distances,
+            opacities,
             edges
         }
     }
@@ -92,17 +94,17 @@ function main([vs, fs]) {
 
         let arrays = {
             position: {numComponents: 2, data: pts},
-            distance: {numComponents: 1, data: range(pts.length / 2).map(() => 0.35)}
+            opacity: {numComponents: 1, data: range(pts.length / 2).map(() => 0.85)}
         };
         let bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
         gl.useProgram(programInfo.program);
         twgl.setBuffersAndAttributes(gl, programInfo, bufferInfo);
         twgl.drawBufferInfo(gl, gl.POINTS, bufferInfo);
 
-        let {edges, distances} = getEdges();
+        let {edges, opacities} = getEdges();
         arrays = {
             position: {numComponents: 2, data: edges},
-            distance: {numComponents: 1, data: distances}
+            opacity: {numComponents: 1, data: opacities}
         };
         bufferInfo = twgl.createBufferInfoFromArrays(gl, arrays);
         gl.useProgram(programInfo.program);

@@ -3,7 +3,7 @@ import {range, random} from 'utils';
 
 const PARTICLE_COUNT = 250;
 const PROXIMITY_THRESHOLD = 0.25;
-const SPEED = 0.0002;
+const SPEED = 0.001;
 
 let container = document.querySelector('.container');
 let shaders = ['js/point.vs', 'js/point.fs', 'js/edge.vs', 'js/edge.fs'];

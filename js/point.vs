@@ -8,7 +8,8 @@ uniform float u_time;
 varying vec2 v_position;
 
 void main() {
-    vec2 pos = position + velocity * u_time;
+    vec2 v = sin(velocity * 3.0);
+    vec2 pos = position + v * u_time;
 
     float x = sin(pos.x * 4.0);
     float y = sin(pos.y * 4.0);

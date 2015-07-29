@@ -2,7 +2,7 @@ import {twgl} from 'twgl.js';
 import {range, random} from 'utils';
 
 const PARTICLE_COUNT = 250;
-const PROXIMITY_THRESHOLD = 0.25;
+const PROXIMITY_THRESHOLD = 0.35;
 const SPEED = 0.000015;
 
 let container = document.querySelector('.container');

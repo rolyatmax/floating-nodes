@@ -16,6 +16,7 @@ float dist(vec2 a, vec2 b) {
 }
 
 vec2 get_position(vec2 p, vec2 v, float t) {
+    v = sin(v * 3.0);
     vec2 pos = p + v * t;
 
     float x = sin(pos.x * 4.0);

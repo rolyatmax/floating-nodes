@@ -3,7 +3,7 @@ import {range, random} from 'utils';
 
 const PARTICLE_COUNT = 250;
 const PROXIMITY_THRESHOLD = 0.25;
-const SPEED = 0.001;
+const SPEED = 0.000015;
 
 let container = document.querySelector('.container');
 let shaders = ['js/point.vs', 'js/point.fs', 'js/edge.vs', 'js/edge.fs'];
@@ -29,7 +29,7 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
         particlePositions[j] = random(-1, 1);
         particleVelocities[j] = random(-SPEED, SPEED);
     }
-    let edges = getEdges(particlePositions);
+    let {edges, velocities} = getEdges(particlePositions, particleVelocities);
 
     let continuePlaying = true;
     document.addEventListener('keydown', (e) => {
@@ -41,72 +41,60 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
         }
     });
 
-    let uniforms = {'u_threshold': PROXIMITY_THRESHOLD};
-    let edgeArrays = {position: {numComponents: 4, data: edges}};
-    let particleArrays = {position: {numComponents: 2, data: particlePositions}};
+    let edgeArrays = {
+        position: {numComponents: 4, data: edges},
+        velocity: {numComponents: 4, data: velocities}
+    };
 
-    function frame(i) {
+
+    let particleArrays = {
+        position: {numComponents: 2, data: particlePositions},
+        velocity: {numComponents: 2, data: particleVelocities}
+    };
+
+
+    let particleBuffer = twgl.createBufferInfoFromArrays(gl, particleArrays);
+    twgl.setBuffersAndAttributes(gl, pointProgramInfo, particleBuffer);
+
+    let edgeBuffer = twgl.createBufferInfoFromArrays(gl, edgeArrays);
+    twgl.setBuffersAndAttributes(gl, edgeProgramInfo, edgeBuffer);
+
+    function frame(t) {
         if (continuePlaying) {
             requestAnimationFrame(frame);
         }
 
         gl.disable(gl.DEPTH_TEST);
 
-        update(particlePositions, particleVelocities, edges);
-
-        let start = Date.now();
-
-        let edgeBuffer = twgl.createBufferInfoFromArrays(gl, edgeArrays);
         gl.useProgram(edgeProgramInfo.program);
-        twgl.setUniforms(edgeProgramInfo, uniforms);
-        twgl.setBuffersAndAttributes(gl, edgeProgramInfo, edgeBuffer);
+        twgl.setUniforms(edgeProgramInfo, {
+            'u_threshold': PROXIMITY_THRESHOLD,
+            'u_time': t
+        });
         twgl.drawBufferInfo(gl, gl.LINES, edgeBuffer);
 
-        if ((i | 0) % 3 === 0) console.log(`elapsed: ${Date.now() - start}`);
-
-        let particleBuffer = twgl.createBufferInfoFromArrays(gl, particleArrays);
         gl.useProgram(pointProgramInfo.program);
-        twgl.setBuffersAndAttributes(gl, pointProgramInfo, particleBuffer);
+        twgl.setUniforms(pointProgramInfo, {
+            'u_time': t
+        });
         twgl.drawBufferInfo(gl, gl.POINTS, particleBuffer);
     }
 
     requestAnimationFrame(frame);
 }
 
-function update(particlePositions, particleVelocities, edges) {
+function getEdges(particlePositions, particleVelocities) {
     let k = 0;
-    for (let i = 0, len = particlePositions.length; i < len; i += 2) {
-        particlePositions[i] += particleVelocities[i];
-        particlePositions[i + 1] += particleVelocities[i + 1];
-
-        for (let j = 0, len = particlePositions.length; j < len; j += 2) {
-            edges[k++] += particleVelocities[i];
-            edges[k++] += particleVelocities[i + 1];
-            edges[k++] += particleVelocities[j];
-            edges[k++] += particleVelocities[j + 1];
-            edges[k++] += particleVelocities[j];
-            edges[k++] += particleVelocities[j + 1];
-            edges[k++] += particleVelocities[i];
-            edges[k++] += particleVelocities[i + 1];
-        }
-
-        if (particlePositions[i] > 1 || particlePositions[i] < -1) {
-            particleVelocities[i] *= -1;
-        }
-        if (particlePositions[i + 1] > 1 || particlePositions[i + 1] < -1) {
-            particleVelocities[i + 1] *= -1;
-        }
-    }
-}
-
-function getEdges(particlePositions) {
-    let k = 0;
+    let p = 0;
     let edgesCount = PARTICLE_COUNT * PARTICLE_COUNT;
     let edges = new Float32Array(edgesCount * 8);
+    let velocities = new Float32Array(edgesCount * 8);
     for (let i = 0, len = particlePositions.length; i < len; i += 2) {
         let p1X = particlePositions[i];
         let p1Y = particlePositions[i + 1];
-        for (let j = 0, len = particlePositions.length; j < len; j += 2) {
+        let v1X = particleVelocities[i];
+        let v1Y = particleVelocities[i + 1];
+        for (let j = i + 2, len = particlePositions.length; j < len; j += 2) {
             let p2X = particlePositions[j];
             let p2Y = particlePositions[j + 1];
 
@@ -118,15 +106,21 @@ function getEdges(particlePositions) {
             edges[k++] = p2Y;
             edges[k++] = p1X;
             edges[k++] = p1Y;
+
+            let v2X = particleVelocities[j];
+            let v2Y = particleVelocities[j + 1];
+
+            velocities[p++] = v1X;
+            velocities[p++] = v1Y;
+            velocities[p++] = v2X;
+            velocities[p++] = v2Y;
+            velocities[p++] = v2X;
+            velocities[p++] = v2Y;
+            velocities[p++] = v1X;
+            velocities[p++] = v1Y;
         }
     }
-    return edges;
-}
-
-function dist([startX, startY], [endX, endY]) {
-    let changeX = endX - startX;
-    let changeY = endY - startY;
-    return Math.sqrt(changeX * changeX + changeY * changeY);
+    return {edges, velocities};
 }
 
 function get(url) {

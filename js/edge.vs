@@ -1,8 +1,12 @@
+precision mediump float;
+
 attribute vec4 position;
+attribute vec4 velocity;
 
 varying vec2 v_position;
 varying float v_opacity;
 
+uniform float u_time;
 uniform float u_threshold;
 
 float dist(vec2 a, vec2 b) {
@@ -11,14 +15,29 @@ float dist(vec2 a, vec2 b) {
     return sqrt(x_diff * x_diff + y_diff * y_diff);
 }
 
-void main() {
-    v_position = position.xy;
+vec2 get_position(vec2 p, vec2 v, float t) {
+    vec2 pos = p + v * t;
 
-    float distance = dist(position.xy, position.zw);
+    float x = sin(pos.x * 4.0);
+    float y = sin(pos.y * 4.0);
+
+    x = pow(x, 1.1) * 2.0 - 1.0;
+    y = pow(y, 1.1) * 2.0 - 1.0;
+
+    return vec2(x, y);
+}
+
+void main() {
+    vec2 pos1 = get_position(position.xy, velocity.xy, u_time);
+    vec2 pos2 = get_position(position.zw, velocity.zw, u_time);
+
+    v_position = pos1;
+    float distance = dist(pos1, pos2);
     if (distance < u_threshold) {
         v_opacity = 1.0 - distance / u_threshold;
-        gl_Position = vec4(position.xy, 0, 1);
+        gl_Position = vec4(pos1, 0, 1);
     } else {
         v_opacity = 0.0;
+        gl_Position = vec4(0, 0, 0, 1);
     }
 }

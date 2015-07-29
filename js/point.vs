@@ -14,10 +14,16 @@ void main() {
     float x = sin(pos.x * 4.0);
     float y = sin(pos.y * 4.0);
 
-    x = pow(x, 1.1) * 2.0 - 1.0;
-    y = pow(y, 1.1) * 2.0 - 1.0;
+    float xSign = x / abs(x);
+    float ySign = y / abs(y);
 
-    v_position = vec2(y, x);
+    x = 1.05 - pow(x, 1.2);
+    y = 1.05 - pow(y, 1.2);
+
+    x *= xSign;
+    y *= ySign;
+
+    v_position = vec2(x, y);
 
     gl_PointSize = 3.0;
     gl_Position = vec4(x, y, 0, 1);

@@ -22,8 +22,14 @@ vec2 get_position(vec2 p, vec2 v, float t) {
     float x = sin(pos.x * 4.0);
     float y = sin(pos.y * 4.0);
 
-    x = pow(x, 1.1) * 2.0 - 1.0;
-    y = pow(y, 1.1) * 2.0 - 1.0;
+    float xSign = x / abs(x);
+    float ySign = y / abs(y);
+
+    x = 1.05 - pow(x, 1.2);
+    y = 1.05 - pow(y, 1.2);
+
+    x *= xSign;
+    y *= ySign;
 
     return vec2(x, y);
 }

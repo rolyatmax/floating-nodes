@@ -1,9 +1,9 @@
 import {twgl} from 'twgl.js';
 import {range, random} from 'utils';
 
-const PARTICLE_COUNT = 250;
-const PROXIMITY_THRESHOLD = 0.35;
-const SPEED = 0.000015;
+const PARTICLE_COUNT = 300;
+const PROXIMITY_THRESHOLD = 0.29;
+const SPEED = 0.00003;
 
 let container = document.querySelector('.container');
 let shaders = ['js/point.vs', 'js/point.fs', 'js/edge.vs', 'js/edge.fs'];

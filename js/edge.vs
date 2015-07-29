@@ -6,6 +6,7 @@ attribute vec4 velocity;
 varying vec2 v_position;
 varying float v_opacity;
 
+uniform vec2 u_mouse;
 uniform float u_time;
 uniform float u_threshold;
 
@@ -17,7 +18,9 @@ float dist(vec2 a, vec2 b) {
 
 vec2 get_position(vec2 p, vec2 v, float t) {
     v = sin(v * 3.0);
-    vec2 pos = p + v * t;
+    float mouseX = u_mouse.x * 0.01;
+    float mouseY = u_mouse.y * 0.01;
+    vec2 pos = vec2(mouseX, mouseY) + p + v * t;
 
     float x = sin(pos.x * 4.0);
     float y = sin(pos.y * 4.0);
@@ -25,8 +28,8 @@ vec2 get_position(vec2 p, vec2 v, float t) {
     float xSign = x / abs(x);
     float ySign = y / abs(y);
 
-    x = 1.05 - pow(x, 1.2);
-    y = 1.05 - pow(y, 1.2);
+    x = (0.75 - pow(x, 1.2)) * 2.0;
+    y = (0.75 - pow(y, 1.2)) * 2.0;
 
     x *= xSign;
     y *= ySign;

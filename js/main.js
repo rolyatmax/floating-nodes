@@ -1,8 +1,8 @@
 import {twgl} from 'twgl.js';
 import {range, random} from 'utils';
 
-const PARTICLE_COUNT = 300;
-const PROXIMITY_THRESHOLD = 0.29;
+const PARTICLE_COUNT = 250;
+const PROXIMITY_THRESHOLD = 0.25;
 const SPEED = 0.00003;
 
 let container = document.querySelector('.container');
@@ -41,6 +41,16 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
         }
     });
 
+    let mouseX = random(-1, 1);
+    let mouseY = random(-1, 1);
+    document.addEventListener('mousemove', (e) => {
+        let {clientX, clientY} = e;
+        clientX -= width / 2;
+        clientY -= height / 2;
+        mouseX = clientX / (width / 2);
+        mouseY = clientY / (height / 2);
+    });
+
     let edgeArrays = {
         position: {numComponents: 4, data: edges},
         velocity: {numComponents: 4, data: velocities}
@@ -59,23 +69,29 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
     let edgeBuffer = twgl.createBufferInfoFromArrays(gl, edgeArrays);
     twgl.setBuffersAndAttributes(gl, edgeProgramInfo, edgeBuffer);
 
+    let start = (Date.now() % (1000 * 60 * 60));
+
     function frame(t) {
         if (continuePlaying) {
             requestAnimationFrame(frame);
         }
+
+        t += start;
 
         gl.disable(gl.DEPTH_TEST);
 
         gl.useProgram(edgeProgramInfo.program);
         twgl.setUniforms(edgeProgramInfo, {
             'u_threshold': PROXIMITY_THRESHOLD,
-            'u_time': t
+            'u_time': t,
+            'u_mouse': [mouseX, mouseY]
         });
         twgl.drawBufferInfo(gl, gl.LINES, edgeBuffer);
 
         gl.useProgram(pointProgramInfo.program);
         twgl.setUniforms(pointProgramInfo, {
-            'u_time': t
+            'u_time': t,
+            'u_mouse': [mouseX, mouseY]
         });
         twgl.drawBufferInfo(gl, gl.POINTS, particleBuffer);
     }

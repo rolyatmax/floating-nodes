@@ -3,10 +3,21 @@ body {
     -webkit-font-smoothing: antialiased;
 }
 
+h1, h2, h3 {
+  line-height: 1.5em;
+  font-size: 28px;
+  margin: 15px 0;
+}
+
 canvas {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+#wrapper {
+    height: 100vh;
+    width: 100vw;
 }
 
 .container {
@@ -15,4 +26,24 @@ canvas {
     left: 0;
     height: 100%;
     width: 100%;
+}
+
+.info_container h1 {
+    text-align: left;
+}
+
+.info_container p {
+    margin: 1em 0;
+    line-height: 1.8em;
+}
+
+.info_container pre {
+    background-color: #333;
+    padding: 10px 15px;
+    border-radius: 5px;
+    overflow-y: scroll;
+}
+
+.info_container code {
+    font-family: monospace;
 }

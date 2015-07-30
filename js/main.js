@@ -125,9 +125,9 @@ function buildParticleBuffers(count, speed) {
 function buildEdgeBuffers(particlePositions, particleVelocities) {
     let k = 0;
     let p = 0;
-    let edgesCount = PARTICLE_COUNT * PARTICLE_COUNT;
-    let edges = new Float32Array(edgesCount * 8);
-    let edgeVelocities = new Float32Array(edgesCount * 8);
+    let edgesCount = PARTICLE_COUNT * PARTICLE_COUNT - particlePositions.length / 2;
+    let edges = new Float32Array(edgesCount * 8 / 2);
+    let edgeVelocities = new Float32Array(edgesCount * 8 / 2);
     for (let i = 0, len = particlePositions.length; i < len; i += 2) {
         let p1X = particlePositions[i];
         let p1Y = particlePositions[i + 1];

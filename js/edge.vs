@@ -28,13 +28,16 @@ vec2 get_position(vec2 p, vec2 v, float t) {
     float xSign = x / abs(x);
     float ySign = y / abs(y);
 
-    if (p.x > 0.0) {
-        x = (0.6 - pow(x, 1.2)) * 0.9;
-        y = (0.6 - pow(y, 1.2)) * 0.9;
-    } else {
-        x = (1.0 - pow(x, 1.2)) * 0.9;
-        y = (1.0 - pow(y, 1.2)) * 0.9;
-    }
+    // if (p.x > 0.0) {
+    //     x = 2.0 * (0.6 - pow(x, 2.0)) - 1.0;
+    //     y = 2.0 * (0.6 - pow(y, 2.0)) - 1.0;
+    // } else {
+        x = (1.0 - pow(x, 2.0));
+        y = (1.0 - pow(y, 2.0));
+    // }
+
+    // x = sin(x);
+    // y = sin(y);
 
     x *= xSign;
     y *= ySign;

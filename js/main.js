@@ -2,8 +2,8 @@ import {twgl} from 'twgl.js';
 import {random} from 'utils';
 import Info from './lib/info';
 
-const PARTICLE_COUNT = 350;
-const PROXIMITY_THRESHOLD = 0.13;
+const PARTICLE_COUNT = 20;
+const PROXIMITY_THRESHOLD = 0.9;
 const SPEED = 0.00002;
 
 new Info({
@@ -34,8 +34,8 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
     let {particles, velocities} = buildParticleBuffers(PARTICLE_COUNT, SPEED);
     let {edges, edgeVelocities} = buildEdgeBuffers(particles, velocities);
 
-    let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities);
-    let particleBuffer = fillBuffers(gl, pointProgramInfo, particles, velocities);
+    let particleBuffer = fillBuffers(gl, pointProgramInfo, particles, velocities, 2);
+    let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities, 4);
 
 
     ////////// event handlers
@@ -67,14 +67,16 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
         }
         t += start;
         gl.disable(gl.DEPTH_TEST);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.ONE, gl.ONE_MINUS_CONSTANT_ALPHA);
 
-        drawBuffer(gl, edgeProgramInfo, gl.LINES, edgeBuffer, {
-            'u_threshold': PROXIMITY_THRESHOLD,
+        drawBuffer(gl, pointProgramInfo, gl.POINTS, particleBuffer, {
             'u_time': t,
             'u_mouse': [mouseX, mouseY]
         });
 
-        drawBuffer(gl, pointProgramInfo, gl.POINTS, particleBuffer, {
+        drawBuffer(gl, edgeProgramInfo, gl.LINES, edgeBuffer, {
+            'u_threshold': PROXIMITY_THRESHOLD,
             'u_time': t,
             'u_mouse': [mouseX, mouseY]
         });
@@ -100,10 +102,10 @@ function setupGL(height, width, container) {
     return gl;
 }
 
-function fillBuffers(gl, program, positions, velocities) {
+function fillBuffers(gl, program, positions, velocities, size) {
     let arrays = {
-        position: {numComponents: 4, data: positions},
-        velocity: {numComponents: 4, data: velocities}
+        position: {numComponents: size, data: positions},
+        velocity: {numComponents: size, data: velocities}
     };
 
     let buffer = twgl.createBufferInfoFromArrays(gl, arrays);
@@ -125,7 +127,7 @@ function buildParticleBuffers(count, speed) {
 function buildEdgeBuffers(particlePositions, particleVelocities) {
     let k = 0;
     let p = 0;
-    let edgesCount = PARTICLE_COUNT * PARTICLE_COUNT - particlePositions.length / 2;
+    let edgesCount = PARTICLE_COUNT * (PARTICLE_COUNT - 1);
     let edges = new Float32Array(edgesCount * 8 / 2);
     let edgeVelocities = new Float32Array(edgesCount * 8 / 2);
     for (let i = 0, len = particlePositions.length; i < len; i += 2) {

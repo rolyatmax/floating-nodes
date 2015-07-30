@@ -32,5 +32,5 @@ void main() {
     g = max(0.1, min(0.9, g));
     b = max(0.15, min(0.95, b));
 
-    gl_FragColor = vec4(r, g, b, v_opacity);
+    gl_FragColor = vec4(r, g, b, v_opacity / 1.5);
 }

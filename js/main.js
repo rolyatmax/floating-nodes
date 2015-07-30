@@ -34,8 +34,8 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
     let {particles, velocities} = buildParticleBuffers(PARTICLE_COUNT, SPEED);
     let {edges, edgeVelocities} = buildEdgeBuffers(particles, velocities);
 
-    let particleBuffer = fillBuffers(gl, pointProgramInfo, particles, velocities, 2);
-    let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities, 4);
+    let particleBuffer = fillBuffers(gl, pointProgramInfo, particles, velocities, 3);
+    let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities, 6);
 
 
     ////////// event handlers
@@ -114,9 +114,9 @@ function fillBuffers(gl, program, positions, velocities, size) {
 }
 
 function buildParticleBuffers(count, speed) {
-    let particles = new Float32Array(count * 2);
-    let velocities = new Float32Array(count * 2);
-    let j = count * 2;
+    let particles = new Float32Array(count * 3);
+    let velocities = new Float32Array(count * 3);
+    let j = count * 3;
     while (j--) {
         particles[j] = random(-1, 1);
         velocities[j] = random(-speed, speed);
@@ -128,37 +128,49 @@ function buildEdgeBuffers(particlePositions, particleVelocities) {
     let k = 0;
     let p = 0;
     let edgesCount = PARTICLE_COUNT * (PARTICLE_COUNT - 1);
-    let edges = new Float32Array(edgesCount * 8 / 2);
-    let edgeVelocities = new Float32Array(edgesCount * 8 / 2);
-    for (let i = 0, len = particlePositions.length; i < len; i += 2) {
+    let edges = new Float32Array(edgesCount * 12 / 2);
+    let edgeVelocities = new Float32Array(edgesCount * 12 / 2);
+    for (let i = 0, len = particlePositions.length; i < len; i += 3) {
         let p1X = particlePositions[i];
         let p1Y = particlePositions[i + 1];
+        let p1Z = particlePositions[i + 2];
         let v1X = particleVelocities[i];
         let v1Y = particleVelocities[i + 1];
-        for (let j = i + 2, leng = particlePositions.length; j < leng; j += 2) {
+        let v1Z = particleVelocities[i + 2];
+        for (let j = i + 3, leng = particlePositions.length; j < leng; j += 3) {
             let p2X = particlePositions[j];
             let p2Y = particlePositions[j + 1];
+            let p2Z = particlePositions[j + 2];
 
             edges[k++] = p1X;
             edges[k++] = p1Y;
+            edges[k++] = p1Z;
             edges[k++] = p2X;
             edges[k++] = p2Y;
+            edges[k++] = p2Z;
             edges[k++] = p2X;
             edges[k++] = p2Y;
+            edges[k++] = p2Z;
             edges[k++] = p1X;
             edges[k++] = p1Y;
+            edges[k++] = p1Z;
 
             let v2X = particleVelocities[j];
             let v2Y = particleVelocities[j + 1];
+            let v2Z = particleVelocities[j + 2];
 
             edgeVelocities[p++] = v1X;
             edgeVelocities[p++] = v1Y;
+            edgeVelocities[p++] = v1Z;
             edgeVelocities[p++] = v2X;
             edgeVelocities[p++] = v2Y;
+            edgeVelocities[p++] = v2Z;
             edgeVelocities[p++] = v2X;
             edgeVelocities[p++] = v2Y;
+            edgeVelocities[p++] = v2Z;
             edgeVelocities[p++] = v1X;
             edgeVelocities[p++] = v1Y;
+            edgeVelocities[p++] = v1Z;
         }
     }
 

@@ -20,16 +20,13 @@ void main() {
     float xSign = x / abs(x);
     float ySign = y / abs(y);
 
-    // if (position.x > 0.0) {
-        // x = (0.6 - pow(x, 1.2)) * 0.9;
-        // y = (0.6 - pow(y, 1.2)) * 0.9;
-    // } else {
-        // x = (1.0 - pow(x, 1.2)) * 0.9;
-        // y = (1.0 - pow(y, 1.2)) * 0.9;
-    // }
-
-    x = (sin(x) - 0.5) * 2.0;
-    y = (sin(y) - 0.5) * 2.0;
+    if (position.x > 0.0) {
+        x = (0.6 - pow(x, 1.2)) * 0.95;
+        y = (0.6 - pow(y, 1.2)) * 0.95;
+    } else {
+        x = (1.0 - pow(x, 1.2)) * 0.95;
+        y = (1.0 - pow(y, 1.2)) * 0.95;
+    }
 
     x *= xSign;
     y *= ySign;

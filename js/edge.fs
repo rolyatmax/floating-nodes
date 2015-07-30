@@ -24,9 +24,9 @@ void main() {
     g = (g / 2.0 + 0.5) * v_position.y * mouseY;
     b = (b / 2.0 + 0.5) * v_position.x * mouseX;
 
-    r = pow(r, 1.2) * signR;
-    g = pow(g, 1.2) * signG;
-    b = pow(b, 1.2) * signB;
+    // r = pow(r, 1.2) * signR;
+    // g = pow(g, 1.2) * signG;
+    // b = pow(b, 1.2) * signB;
 
     r = max(0.05, min(0.85, r));
     g = max(0.1, min(0.9, g));

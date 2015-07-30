@@ -16,6 +16,10 @@ float dist(vec2 a, vec2 b) {
     return sqrt(x_diff * x_diff + y_diff * y_diff);
 }
 
+float tri(float x) {
+    return 2.0 * abs(2.0 * (x - floor(x + 0.5))) - 1.0;
+}
+
 vec2 get_position(vec2 p, vec2 v, float t) {
     v = sin(v * 3.0);
     float mouseX = u_mouse.x * 0.01;
@@ -28,16 +32,13 @@ vec2 get_position(vec2 p, vec2 v, float t) {
     float xSign = x / abs(x);
     float ySign = y / abs(y);
 
-    // if (p.x > 0.0) {
-    //     x = 2.0 * (0.6 - pow(x, 2.0)) - 1.0;
-    //     y = 2.0 * (0.6 - pow(y, 2.0)) - 1.0;
-    // } else {
-        x = (1.0 - pow(x, 2.0));
-        y = (1.0 - pow(y, 2.0));
-    // }
-
-    // x = sin(x);
-    // y = sin(y);
+    if (p.x > 0.0) {
+        x = (0.6 - pow(x, 1.2)) * 0.95;
+        y = (0.6 - pow(y, 1.2)) * 0.95;
+    } else {
+        x = (1.0 - pow(x, 1.2)) * 0.95;
+        y = (1.0 - pow(y, 1.2)) * 0.95;
+    }
 
     x *= xSign;
     y *= ySign;

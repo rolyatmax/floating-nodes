@@ -2,8 +2,8 @@ import {twgl} from 'twgl.js';
 import {random} from 'utils';
 import Info from './lib/info';
 
-const PARTICLE_COUNT = 20;
-const PROXIMITY_THRESHOLD = 0.9;
+const PARTICLE_COUNT = 500;
+const PROXIMITY_THRESHOLD = 0.15;
 const SPEED = 0.00002;
 
 new Info({

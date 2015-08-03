@@ -58,7 +58,7 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
             if (continuePlaying) {
                 requestAnimationFrame(frame);
             }
-        } else if (e.which === 192) {
+        } else if (e.which === 192) { // tilde
             curBg = (curBg + 1) % backgrounds.length;
             gl.clearColor(...backgrounds[curBg]);
         }

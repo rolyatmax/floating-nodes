@@ -6,12 +6,16 @@ const PARTICLE_COUNT = 500;
 const PROXIMITY_THRESHOLD = 0.15;
 const SPEED = 0.00002;
 
+const DARK_BG = [0.2, 0.2, 0.2, 1];
+const LIGHT_BG = [0.95, 0.95, 0.95, 0];
+
 new Info({
     url: 'README.md',
     keyTrigger: true,
     container: 'wrapper'
 });
 
+let backgrounds = [LIGHT_BG, DARK_BG];
 let continuePlaying = true;
 let mouseX = random(-1, 1);
 let mouseY = random(-1, 1);
@@ -38,6 +42,14 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
     let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities, 4);
 
 
+    let curBg = 0;
+    // Show dark background based on time of day
+    let hour = (new Date()).getHours();
+    if (hour < 6 || hour > 19) {
+        curBg = 1;
+        gl.clearColor(...backgrounds[curBg]);
+    }
+
     ////////// event handlers
 
     document.addEventListener('keydown', (e) => {
@@ -46,6 +58,9 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
             if (continuePlaying) {
                 requestAnimationFrame(frame);
             }
+        } else if (e.which === 192) {
+            curBg = (curBg + 1) % backgrounds.length;
+            gl.clearColor(...backgrounds[curBg]);
         }
     });
 
@@ -69,6 +84,9 @@ function main([pointVs, pointFs, edgeVs, edgeFs]) {
         gl.disable(gl.DEPTH_TEST);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.ONE, gl.ONE_MINUS_CONSTANT_ALPHA);
+        if (curBg) {
+            gl.clear(gl.COLOR_BUFFER_BIT);
+        }
 
         drawBuffer(gl, pointProgramInfo, gl.POINTS, particleBuffer, {
             'u_time': t,

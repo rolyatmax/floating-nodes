@@ -1,6 +1,6 @@
 {
   "name": "floating-nodes",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "",
   "main": "js/main.js",
   "repository": {
@@ -12,10 +12,9 @@
   },
   "homepage": "https://github.com/rolyatmax/floating-nodes#readme",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "watch": "mkdir -p build && node_modules/.bin/watchify js/main.js -o build/build.js -v",
-    "build": "mkdir -p build && node_modules/.bin/browserify js/main.js -o build/build.js",
-    "serve": "python -m SimpleHTTPServer 4343"
+    "watch": "mkdir -p build && watchify . -o build/build.js -vd",
+    "build": "mkdir -p build && browserify . > build/build.js",
+    "serve": "open http://localhost:4343 && python -m SimpleHTTPServer 4343"
   },
   "author": "Taylor Baldwin <taylorbaldwin@gmail.com> (https://tbaldw.in)",
   "license": "ISC",
@@ -32,9 +31,6 @@
         "babelify"
       ]
     ]
-  },
-  "babel": {
-    "sourceMaps": "inline"
   },
   "dependencies": {
     "twgl.js": "0.0.25",

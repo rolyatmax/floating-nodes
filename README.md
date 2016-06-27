@@ -11,6 +11,8 @@ mouse coordinates.
 Thanks to the [TWGL](http://twgljs.org/), a "Tiny WebGL Helper Library", which
 takes care of a lot of the WebGL boilerplate.
 
+![nodes](/img/img.png?raw=true "nodes")
+
 -------------------
 
 # Run it yourself:

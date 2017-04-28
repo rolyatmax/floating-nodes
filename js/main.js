@@ -1,7 +1,6 @@
 /* global requestAnimationFrame XMLHttpRequest */
 
 import {twgl} from 'twgl.js'
-import {random} from 'utils'
 import Info from './lib/info'
 
 const PARTICLE_COUNT = 400
@@ -27,8 +26,6 @@ let shaders = ['js/point.vs', 'js/point.fs', 'js/edge.vs', 'js/edge.fs']
 Promise.all(shaders.map(get)).then(main)
 
 function main ([pointVs, pointFs, edgeVs, edgeFs]) {
-  console.log(pointFs)
-
   /// /////// setup webgl
 
   let container = document.querySelector('.container')
@@ -214,4 +211,8 @@ function get (url) {
     }
     request.send()
   })
+}
+
+function random (min, max) {
+  return Math.random() * (max - min) + min
 }

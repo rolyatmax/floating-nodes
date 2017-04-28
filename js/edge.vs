@@ -57,6 +57,6 @@ void main() {
         gl_Position = vec4(pos1, 0, 1);
     } else {
         v_opacity = 0.0;
-        gl_Position = vec4(0, 0, 0, 1);
+        gl_Position = vec4(0, 0, 0, 0);
     }
 }

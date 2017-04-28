@@ -41,8 +41,7 @@
     ]
   },
   "dependencies": {
-    "twgl.js": "0.0.25",
-    "utils": "git+ssh://git@github.com:rolyatmax/utils.git"
+    "twgl.js": "0.0.25"
   },
   "standard": {
     "ignore": [

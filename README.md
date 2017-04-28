@@ -18,13 +18,7 @@ takes care of a lot of the WebGL boilerplate.
 # Run it yourself:
 
     npm install
-    npm run watch
-
-Then:
-
-    npm run serve
-
-And point your browser to `localhost:4343`.
+    npm start
 
 ------------------
 

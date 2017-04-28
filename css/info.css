@@ -26,6 +26,10 @@
 	box-sizing: border-box;
 }
 
+.info_container img {
+	max-width: 100%;
+}
+
 .info_container.open {
 	left: 0;
 }

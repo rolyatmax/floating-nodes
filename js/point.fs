@@ -1,23 +1,23 @@
-precision mediump float;
+precision highp float;
 
 varying vec2 v_position;
 
-uniform vec2 u_mouse;
-uniform float u_time;
+uniform vec2 mouse;
+uniform float elapsed;
 
 void main() {
     float change = 0.0008;
 
-    float r = cos(u_time * change);
-    float g = sin(u_time * change);
-    float b = sin(u_time * change);
+    float r = cos(elapsed * change);
+    float g = sin(elapsed * change);
+    float b = sin(elapsed * change);
 
     float signR = r / abs(r);
     float signG = g / abs(g);
     float signB = b / abs(b);
 
-    float mouseX = abs(u_mouse.x);
-    float mouseY = abs(u_mouse.y);
+    float mouseX = abs(mouse.x);
+    float mouseY = abs(mouse.y);
 
     r = (r / 2.0 + 0.5) * v_position.x * mouseX;
     g = (g / 2.0 + 0.5) * v_position.y * mouseY;

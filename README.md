@@ -8,8 +8,7 @@ to find distances and set colors, in the shaders. The only changing inputs to
 the shaders from frame to frame during the animation loop are a timestamp and
 mouse coordinates.
 
-Thanks to the [TWGL](http://twgljs.org/), a "Tiny WebGL Helper Library", which
-takes care of a lot of the WebGL boilerplate.
+Recently rewritten with [regl](http://regl.party)!
 
 ![nodes](/img/img.png?raw=true "nodes")
 

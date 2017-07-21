@@ -1,11 +1,11 @@
-/* global requestAnimationFrame XMLHttpRequest */
-
-import {twgl} from 'twgl.js'
+import createRegl from 'regl'
+import fit from 'canvas-fit'
 import Info from './lib/info'
+const glslify = require('glslify')
 
-const PARTICLE_COUNT = 400
-const PROXIMITY_THRESHOLD = 0.15
-const SPEED = 0.00002
+const PARTICLE_COUNT = 500
+const PROXIMITY_THRESHOLD = 0.12
+const SPEED = 0.02
 
 const DARK_BG = [0.2, 0.2, 0.2, 1]
 const LIGHT_BG = [0.95, 0.95, 0.95, 0]
@@ -18,134 +18,145 @@ new Info({
 })
 
 let backgrounds = [LIGHT_BG, DARK_BG]
-let continuePlaying = true
 let mouseX = random(-1, 1)
 let mouseY = random(-1, 1)
-let shaders = ['js/point.vs', 'js/point.fs', 'js/edge.vs', 'js/edge.fs']
 
-Promise.all(shaders.map(get)).then(main)
+const { particles, velocities } = buildParticleBuffers(PARTICLE_COUNT, SPEED)
 
-function main ([pointVs, pointFs, edgeVs, edgeFs]) {
-  /// /////// setup webgl
+const container = document.querySelector('.container')
+const canvas = container.appendChild(document.createElement('canvas'))
+const regl = createRegl(canvas)
+const resize = fit(canvas)
+resize.parent = () => {
+  const height = window.innerHeight
+  const width = window.innerWidth
+  const largestDimension = Math.max(width, height)
+  canvas.style.top = `${(height - largestDimension) / 2}px`
+  canvas.style.left = `${(width - largestDimension) / 2}px`
+  return [largestDimension, largestDimension]
+}
+resize()
+window.addEventListener('resize', resize, false)
 
-  let container = document.querySelector('.container')
-  let {height, width} = container.getBoundingClientRect()
-  let gl = setupGL(container)
-  resize(height, width, gl)
+let curBg = 0
+  // Show dark background based on time of day
+let hour = (new Date()).getHours()
+if (hour < 6 || hour > 19) {
+  curBg = 1
+}
 
-  let pointProgramInfo = twgl.createProgramInfo(gl, [pointVs, pointFs])
-  let edgeProgramInfo = twgl.createProgramInfo(gl, [edgeVs, edgeFs])
+const globalDraw = createGlobalRenderer()
+const drawPoints = createPointsRenderer(particles, velocities)
+const drawEdges = createEdgesRenderer(particles, velocities)
 
-  let {particles, velocities} = buildParticleBuffers(PARTICLE_COUNT, SPEED)
-  let {edges, edgeVelocities} = buildEdgeBuffers(particles, velocities)
-
-  let particleBuffer = fillBuffers(gl, pointProgramInfo, particles, velocities, 2)
-  let edgeBuffer = fillBuffers(gl, edgeProgramInfo, edges, edgeVelocities, 4)
-
-  let curBg = 0
-    // Show dark background based on time of day
-  let hour = (new Date()).getHours()
-  if (hour < 6 || hour > 19) {
-    curBg = 1
-    gl.clearColor(...backgrounds[curBg])
-  }
-
-  /// /////// event handlers
-
-  document.addEventListener('keydown', (e) => {
-    if (e.which === 32) { // spacebar
-      continuePlaying = !continuePlaying
-      if (continuePlaying) {
-        requestAnimationFrame(frame)
-      }
-    } else if (e.which === 192) { // tilde
-      curBg = (curBg + 1) % backgrounds.length
-      gl.clearColor(...backgrounds[curBg])
-    }
-  })
-
-  document.addEventListener('mousemove', (e) => {
-    let {clientX, clientY} = e
-    clientX -= width / 2
-    clientY -= height / 2
-    mouseX = clientX / (width / 2)
-    mouseY = clientY / (height / 2)
-  })
-
-  window.addEventListener('resize', () => {
-    let rect = container.getBoundingClientRect()
-    height = rect.height
-    width = rect.width
-    resize(height, width, gl)
-  })
-
-  /// ////// animation loop
-
-  let start = (Date.now() % (1000 * 60 * 60))
-  function frame (t) {
-    if (continuePlaying) {
-      requestAnimationFrame(frame)
-    }
-    t += start
-    gl.disable(gl.DEPTH_TEST)
-    gl.enable(gl.BLEND)
-    gl.blendFunc(gl.ONE, gl.ONE_MINUS_CONSTANT_ALPHA)
+let cancel
+let start = 0
+function startLoop () {
+  const tick = regl.frame(({ time }) => {
+    start = start || time
+    const elapsed = time - start
+    // debugger;
     if (curBg) {
-      gl.clear(gl.COLOR_BUFFER_BIT)
+      regl.clear({
+        color: backgrounds[curBg],
+        depth: 1
+      })
     }
-
-    drawBuffer(gl, pointProgramInfo, gl.POINTS, particleBuffer, {
-      'u_time': t,
-      'u_mouse': [mouseX, mouseY]
+    globalDraw({
+      elapsed: elapsed,
+      mouse: [mouseX, mouseY],
+      threshold: PROXIMITY_THRESHOLD
+    }, () => {
+      drawPoints()
+      drawEdges()
     })
+  })
+  cancel = tick.cancel
+}
 
-    drawBuffer(gl, edgeProgramInfo, gl.LINES, edgeBuffer, {
-      'u_threshold': PROXIMITY_THRESHOLD,
-      'u_time': t,
-      'u_mouse': [mouseX, mouseY]
-    })
+startLoop()
+
+function createGlobalRenderer () {
+  return regl({
+    uniforms: {
+      elapsed: regl.prop('elapsed'),
+      mouse: regl.prop('mouse'),
+      threshold: regl.prop('threshold')
+    },
+
+    depth: {
+      enable: false
+    },
+
+    blend: {
+      enable: true,
+      func: {
+        src: 1,
+        dst: 'one minus constant alpha'
+      },
+      equation: {
+        rgb: 'add',
+        alpha: 'add'
+      }
+    }
+  })
+}
+
+function createPointsRenderer (particles, velocities) {
+  return regl({
+    vert: glslify.file('./point.vs'),
+    frag: glslify.file('./point.fs'),
+
+    attributes: {
+      position: particles,
+      velocity: velocities
+    },
+
+    count: particles.length / 2,
+
+    primitive: 'points'
+  })
+}
+
+function createEdgesRenderer (particles, velocities) {
+  const { edges, edgeVelocities } = buildEdgeBuffers(particles, velocities)
+  return regl({
+    vert: glslify.file('./edge.vs'),
+    frag: glslify.file('./edge.fs'),
+
+    attributes: {
+      position: edges,
+      velocity: edgeVelocities
+    },
+
+    count: edges.length / 4, // is this right?
+
+    primitive: 'lines'
+  })
+}
+
+/// /////// event handlers
+
+document.addEventListener('keydown', (e) => {
+  if (e.which === 32) { // spacebar
+    if (cancel) {
+      cancel()
+      cancel = null
+    } else {
+      startLoop()
+    }
+  } else if (e.which === 192) { // tilde
+    curBg = (curBg + 1) % backgrounds.length
   }
+})
 
-  requestAnimationFrame(frame)
-}
-
-function drawBuffer (gl, program, DRAW_MODE, buff, uniforms) {
-  gl.useProgram(program.program)
-  twgl.setUniforms(program, uniforms)
-  twgl.drawBufferInfo(gl, DRAW_MODE, buff)
-}
-
-function setupGL (container) {
-  let canvas = document.createElement('canvas')
-  container.appendChild(canvas)
-  let gl = twgl.getWebGLContext(canvas)
-  twgl.resizeCanvasToDisplaySize(gl.canvas)
-  return gl
-}
-
-function resize (height, width, gl) {
-  let size = Math.max(height, width)
-  gl.canvas.style.height = `${size}px`
-  gl.canvas.style.width = `${size}px`
-  gl.canvas.width = gl.canvas.height = size
-  let top = size > height ? (height - size) / 2 : 0
-  let left = size > width ? (width - size) / 2 : 0
-  gl.canvas.style.position = 'relative'
-  gl.canvas.style.top = `${top}px`
-  gl.canvas.style.left = `${left}px`
-  gl.viewport(0, 0, gl.canvas.width, gl.canvas.height)
-}
-
-function fillBuffers (gl, program, positions, velocities, size) {
-  let arrays = {
-    position: {numComponents: size, data: positions},
-    velocity: {numComponents: size, data: velocities}
-  }
-
-  let buffer = twgl.createBufferInfoFromArrays(gl, arrays)
-  twgl.setBuffersAndAttributes(gl, program, buffer)
-  return buffer
-}
+canvas.addEventListener('mousemove', (e) => {
+  let { offsetX, offsetY } = e
+  offsetX -= canvas.width / 2
+  offsetY -= canvas.height / 2
+  mouseX = offsetX / (canvas.width / 2)
+  mouseY = -offsetY / (canvas.height / 2)
+})
 
 function buildParticleBuffers (count, speed) {
   let particles = new Float32Array(count * 2)
@@ -197,20 +208,6 @@ function buildEdgeBuffers (particlePositions, particleVelocities) {
   }
 
   return {edges, edgeVelocities}
-}
-
-function get (url) {
-  return new Promise(function (resolve, reject) {
-    let request = new XMLHttpRequest()
-    request.open('GET', url, true)
-    request.onload = function () {
-      (this.status >= 200 && this.status < 400 ? resolve : reject)(this.response)
-    }
-    request.onerror = function () {
-      reject(this.response)
-    }
-    request.send()
-  })
 }
 
 function random (min, max) {

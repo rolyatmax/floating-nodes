@@ -29,6 +29,7 @@
   },
   "browserify": {
     "transform": [
+      "glslify",
       [
         "babelify",
         {
@@ -41,6 +42,9 @@
     ]
   },
   "dependencies": {
+    "canvas-fit": "^1.5.0",
+    "glslify": "^6.1.0",
+    "regl": "^1.3.0",
     "twgl.js": "0.0.25"
   },
   "standard": {

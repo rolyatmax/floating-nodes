@@ -3,7 +3,7 @@ import fit from 'canvas-fit'
 import Info from './lib/info'
 const glslify = require('glslify')
 
-const PARTICLE_COUNT = 500
+const PARTICLE_COUNT = 400
 const PROXIMITY_THRESHOLD = 0.12
 const SPEED = 0.02
 

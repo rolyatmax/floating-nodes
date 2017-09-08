@@ -33,5 +33,5 @@ void main() {
     v_position = vec2(x, y);
 
     gl_PointSize = 2.0;
-    gl_Position = vec4(x, y, 0, 1);
+    gl_Position = vec4(x, y, 0.0, 1.0);
 }

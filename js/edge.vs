@@ -8,12 +8,6 @@ uniform vec2 mouse;
 uniform float elapsed;
 uniform float threshold;
 
-float dist(vec2 a, vec2 b) {
-    float x_diff = a.x - b.x;
-    float y_diff = a.y - b.y;
-    return sqrt(x_diff * x_diff + y_diff * y_diff);
-}
-
 float tri(float x) {
     return 2.0 * abs(2.0 * (x - floor(x + 0.5))) - 1.0;
 }
@@ -50,9 +44,9 @@ void main() {
     vec2 pos2 = get_position(position.zw, velocity.zw, elapsed);
 
     v_position = pos1;
-    float distance = dist(pos1, pos2);
-    if (distance < threshold) {
-        v_opacity = 1.0 - distance / threshold;
+    float dist = distance(pos1, pos2);
+    if (dist < threshold) {
+        v_opacity = 1.0 - dist / threshold;
         gl_Position = vec4(pos1, 0, 1);
     } else {
         v_opacity = 0.0;

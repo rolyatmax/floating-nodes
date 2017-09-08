@@ -1,10 +1,12 @@
 import createRegl from 'regl'
 import fit from 'canvas-fit'
 import Info from './lib/info'
+const createCamera = require('3d-view-controls')
+const mat4 = require('gl-mat4')
 const glslify = require('glslify')
 
-const PARTICLE_COUNT = 400
-const PROXIMITY_THRESHOLD = 0.12
+const PARTICLE_COUNT = 700
+const PROXIMITY_THRESHOLD = 0.32
 const SPEED = 0.02
 
 const DARK_BG = [0.2, 0.2, 0.2, 1]
@@ -25,6 +27,7 @@ const { particles, velocities } = buildParticleBuffers(PARTICLE_COUNT, SPEED)
 
 const container = document.querySelector('.container')
 const canvas = container.appendChild(document.createElement('canvas'))
+const camera = createCamera(canvas)
 const regl = createRegl(canvas)
 const resize = fit(canvas)
 resize.parent = () => {
@@ -37,6 +40,15 @@ resize.parent = () => {
 }
 resize()
 window.addEventListener('resize', resize, false)
+
+camera.zoomSpeed = 4
+camera.lookAt(
+  [0, 0, 3],
+  [0, 0, 0],
+  [0, 0, 0]
+)
+
+window.camera = camera
 
 let curBg = 0
   // Show dark background based on time of day
@@ -55,7 +67,7 @@ function startLoop () {
   const tick = regl.frame(({ time }) => {
     start = start || time
     const elapsed = time - start
-    // debugger;
+    camera.tick()
     if (curBg) {
       regl.clear({
         color: backgrounds[curBg],
@@ -79,6 +91,14 @@ startLoop()
 function createGlobalRenderer () {
   return regl({
     uniforms: {
+      projection: ({viewportWidth, viewportHeight}) => (
+        mat4.perspective([],
+          Math.PI / 2,
+          viewportWidth / viewportHeight,
+          0.01,
+          1000)
+      ),
+      view: () => camera.matrix,
       elapsed: regl.prop('elapsed'),
       mouse: regl.prop('mouse'),
       threshold: regl.prop('threshold')
@@ -112,24 +132,26 @@ function createPointsRenderer (particles, velocities) {
       velocity: velocities
     },
 
-    count: particles.length / 2,
+    count: particles.length / 3,
 
     primitive: 'points'
   })
 }
 
 function createEdgesRenderer (particles, velocities) {
-  const { edges, edgeVelocities } = buildEdgeBuffers(particles, velocities)
+  const { edgePoints, otherEdgePoints, edgeVelocities, otherEdgeVelocities } = buildEdgeBuffers(particles, velocities)
   return regl({
     vert: glslify.file('./edge.vs'),
     frag: glslify.file('./edge.fs'),
 
     attributes: {
-      position: edges,
-      velocity: edgeVelocities
+      position: edgePoints,
+      otherPosition: otherEdgePoints,
+      velocity: edgeVelocities,
+      otherVelocity: otherEdgeVelocities
     },
 
-    count: edges.length / 4, // is this right?
+    count: edgePoints.length / 3, // is this right?
 
     primitive: 'lines'
   })
@@ -159,9 +181,9 @@ canvas.addEventListener('mousemove', (e) => {
 })
 
 function buildParticleBuffers (count, speed) {
-  let particles = new Float32Array(count * 2)
-  let velocities = new Float32Array(count * 2)
-  let j = count * 2
+  let particles = new Float32Array(count * 3)
+  let velocities = new Float32Array(count * 3)
+  let j = count * 3
   while (j--) {
     particles[j] = random(-1, 1)
     velocities[j] = random(-speed, speed)
@@ -172,42 +194,64 @@ function buildParticleBuffers (count, speed) {
 function buildEdgeBuffers (particlePositions, particleVelocities) {
   let k = 0
   let p = 0
+  let l = 0
+  let n = 0
   let edgesCount = PARTICLE_COUNT * (PARTICLE_COUNT - 1)
-  let edges = new Float32Array(edgesCount * 8 / 2)
-  let edgeVelocities = new Float32Array(edgesCount * 8 / 2)
-  for (let i = 0, len = particlePositions.length; i < len; i += 2) {
+  let edgePoints = new Float32Array(edgesCount * 3)
+  let otherEdgePoints = new Float32Array(edgesCount * 3)
+  let edgeVelocities = new Float32Array(edgesCount * 3)
+  let otherEdgeVelocities = new Float32Array(edgesCount * 3)
+  for (let i = 0, len = particlePositions.length; i < len; i += 3) {
     let p1X = particlePositions[i]
     let p1Y = particlePositions[i + 1]
+    let p1Z = particlePositions[i + 2]
     let v1X = particleVelocities[i]
     let v1Y = particleVelocities[i + 1]
-    for (let j = i + 2, leng = particlePositions.length; j < leng; j += 2) {
+    let v1Z = particleVelocities[i + 2]
+    for (let j = i + 3, leng = particlePositions.length; j < leng; j += 3) {
       let p2X = particlePositions[j]
       let p2Y = particlePositions[j + 1]
+      let p2Z = particlePositions[j + 2]
 
-      edges[k++] = p1X
-      edges[k++] = p1Y
-      edges[k++] = p2X
-      edges[k++] = p2Y
-      edges[k++] = p2X
-      edges[k++] = p2Y
-      edges[k++] = p1X
-      edges[k++] = p1Y
+      edgePoints[k++] = p1X
+      edgePoints[k++] = p1Y
+      edgePoints[k++] = p1Z
+
+      otherEdgePoints[l++] = p2X
+      otherEdgePoints[l++] = p2Y
+      otherEdgePoints[l++] = p2Z
+
+      edgePoints[k++] = p2X
+      edgePoints[k++] = p2Y
+      edgePoints[k++] = p2Z
+
+      otherEdgePoints[l++] = p1X
+      otherEdgePoints[l++] = p1Y
+      otherEdgePoints[l++] = p1Z
 
       let v2X = particleVelocities[j]
       let v2Y = particleVelocities[j + 1]
+      let v2Z = particleVelocities[j + 2]
 
       edgeVelocities[p++] = v1X
       edgeVelocities[p++] = v1Y
+      edgeVelocities[p++] = v1Z
+
+      otherEdgeVelocities[n++] = v2X
+      otherEdgeVelocities[n++] = v2Y
+      otherEdgeVelocities[n++] = v2Z
+
       edgeVelocities[p++] = v2X
       edgeVelocities[p++] = v2Y
-      edgeVelocities[p++] = v2X
-      edgeVelocities[p++] = v2Y
-      edgeVelocities[p++] = v1X
-      edgeVelocities[p++] = v1Y
+      edgeVelocities[p++] = v2Z
+
+      otherEdgeVelocities[n++] = v1X
+      otherEdgeVelocities[n++] = v1Y
+      otherEdgeVelocities[n++] = v1Z
     }
   }
 
-  return {edges, edgeVelocities}
+  return { edgePoints, otherEdgePoints, edgeVelocities, otherEdgeVelocities }
 }
 
 function random (min, max) {

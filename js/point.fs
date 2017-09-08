@@ -1,6 +1,6 @@
 precision highp float;
 
-varying vec2 v_position;
+varying vec3 v_position;
 
 uniform vec2 mouse;
 uniform float elapsed;

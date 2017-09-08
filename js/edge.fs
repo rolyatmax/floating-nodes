@@ -1,6 +1,6 @@
 precision highp float;
 
-varying vec2 v_position;
+varying vec3 v_position;
 varying float v_opacity;
 
 uniform vec2 mouse;
@@ -28,7 +28,7 @@ void main() {
   // g = pow(g, 1.2) * signG;
   // b = pow(b, 1.2) * signB;
 
-  float mouseDistance = distance(mouse, v_position);
+  float mouseDistance = distance(mouse, v_position.xy);
   r += max(0.0, 0.1 - mouseDistance) * (sin(elapsed / 10.0) / 2.0 + 0.5);
   g += max(0.0, 0.1 - mouseDistance) * (cos(elapsed / 9.0) / 2.0 + 0.5);
   b += max(0.0, 0.1 - mouseDistance) * (sin(elapsed / 8.0) / 2.0 + 0.5);

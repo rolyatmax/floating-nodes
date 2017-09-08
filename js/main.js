@@ -68,6 +68,11 @@ function startLoop () {
     start = start || time
     const elapsed = time - start
     camera.tick()
+    camera.center = [
+      Math.sin(time / 3) * 2,
+      Math.cos(time / 3) * 2,
+      Math.sin(time / 2) * 2
+    ]
     if (curBg) {
       regl.clear({
         color: backgrounds[curBg],

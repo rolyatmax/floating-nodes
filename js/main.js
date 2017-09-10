@@ -5,9 +5,9 @@ const createCamera = require('3d-view-controls')
 const mat4 = require('gl-mat4')
 const glslify = require('glslify')
 
-const PARTICLE_COUNT = 700
-const PROXIMITY_THRESHOLD = 0.32
-const SPEED = 0.02
+const PARTICLE_COUNT = 600
+const PROXIMITY_THRESHOLD = 0.4
+const SPEED = 0.008
 
 const DARK_BG = [0.2, 0.2, 0.2, 1]
 const LIGHT_BG = [0.95, 0.95, 0.95, 0]
@@ -50,12 +50,7 @@ camera.lookAt(
 
 window.camera = camera
 
-let curBg = 0
-  // Show dark background based on time of day
-let hour = (new Date()).getHours()
-if (hour < 6 || hour > 19) {
-  curBg = 1
-}
+let curBg = 1 // Show dark background by default
 
 const globalDraw = createGlobalRenderer()
 const drawPoints = createPointsRenderer(particles, velocities)
@@ -116,14 +111,17 @@ function createGlobalRenderer () {
     blend: {
       enable: true,
       func: {
-        src: 1,
-        dst: 'one minus constant alpha'
+        srcRGB: 'src alpha',
+        dstRGB: 1,
+        srcAlpha: 1,
+        dstAlpha: 1
       },
       equation: {
         rgb: 'add',
         alpha: 'add'
       }
     }
+
   })
 }
 

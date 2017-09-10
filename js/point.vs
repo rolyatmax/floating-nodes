@@ -26,11 +26,11 @@ void main() {
     if (position.x > 0.0) {
         x = (0.6 - pow(x, power)) * mult;
         y = (0.6 - pow(y, power)) * mult;
-        y = (0.6 - pow(z, power)) * mult;
+        z = (0.6 - pow(z, power)) * mult;
     } else {
         x = (1.0 - pow(x, power)) * mult;
         y = (1.0 - pow(y, power)) * mult;
-        z = (1.0 - pow(y, power)) * mult;
+        z = (1.0 - pow(z, power)) * mult;
     }
 
     x *= xSign;

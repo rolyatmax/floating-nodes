@@ -12,10 +12,6 @@ uniform float threshold;
 uniform mat4 projection;
 uniform mat4 view;
 
-float tri(float x) {
-    return 2.0 * abs(2.0 * (x - floor(x + 0.5))) - 1.0;
-}
-
 vec3 get_position(vec3 p, vec3 v, float t) {
     v = sin(v * 3.0);
     vec3 pos = vec3(mouse.x, mouse.y, 0) * 0.01 + p + v * t;
